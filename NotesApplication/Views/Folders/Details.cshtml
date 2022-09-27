@@ -1,0 +1,64 @@
+﻿@model NotesApplication.Models.Folder
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var childFolders = ViewData["ChildFolders"] as List<Folder>;
+    var notes = ViewData["Notes"] as List<Note>;
+}
+
+<h1>Details</h1>
+
+
+<div>
+    <p>Sort by:</p>
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="title">Title</a> |
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="prio">Priority</a> |
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="date">Date</a>
+</div>
+<div>
+    <h4>Folder</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Image)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Image)
+        </dd>
+        
+    </dl>
+</div>
+<div>
+    @foreach (var folder in childFolders)
+    {
+        <div>
+            <p>Folder title: </p><a asp-controller="Folders" asp-action="Details" asp-route-id="@folder?.Id">@folder.Title</a>
+            <p>Folder image: </p><p>@folder.Image</p>
+        </div>
+    }
+
+    @foreach (var note in notes)
+    {
+        <div>
+            <p>Note title: </p><a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a>
+            <p>Note text: </p><p>@note.Text</p>
+            <p>Priority: </p><p>@note.Priority</p>
+            <p>Created: </p><p>@note.CreationDate<p>
+        </div>
+    }
+</div>
+<div>
+    <a asp-controller="Notes" asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create note</a> |
+    <a asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create folder</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    @if(!Model.IsRoot) {
+        <a asp-action="Details" asp-route-id="@Model.ParentFolderId">Back to List</a>
+    }
+</div>

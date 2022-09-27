@@ -1,0 +1,29 @@
+﻿@model ICollection<NotesApplication.Models.Note>
+
+@{
+    Layout = "_Layout";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>All notes</title>
+</head>
+
+<body>
+<div>
+    @foreach(var note in Model) {
+        <div>
+            <p>Title: </p><a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a>
+            <p>Priority: </p><p>@note.Priority</p>
+            <p>Created: </p><p>@note.CreationDate<p>
+        </div>
+    }
+</div>
+<div>
+    <a asp-controller="Home" asp-action="Index">Back</a>
+</div>
+</body>
+</html>
