@@ -162,7 +162,7 @@ namespace NotesApplication.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    Image = table.Column<string>(type: "text", nullable: false),
+                    ImagePath = table.Column<string>(type: "text", nullable: false),
                     IsRoot = table.Column<bool>(type: "boolean", nullable: false),
                     OwnerId = table.Column<string>(type: "text", nullable: false),
                     ParentFolderId = table.Column<int>(type: "integer", nullable: true)

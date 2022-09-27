@@ -25,9 +25,10 @@ namespace NotesApplication.Controllers
         }
 
         // GET: Notes
-        public async Task<IActionResult> All()
+        public async Task<IActionResult> All(string? searchQuery)
         {
-            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
+            var query = String.IsNullOrEmpty(searchQuery) ? "" : searchQuery;
+            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier) && n.Title.ToUpper().Contains(query.ToUpper())).ToListAsync();
             return View(notes);
         }
 

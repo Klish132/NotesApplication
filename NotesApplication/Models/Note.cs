@@ -25,10 +25,9 @@ namespace NotesApplication.Models
     {
         public int Id { get; set; }
         public string Title { get; set; } = "";
-        public string Image { get; set; } = "";
-
+        [DisplayName("Upload Image")]
+        public string ImagePath { get; set; } = "";
         public bool IsRoot { get; set; } = false;
-
         public string OwnerId { get; set; }
         public virtual ApplicationUser? Owner { get; set; }
 
