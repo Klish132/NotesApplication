@@ -3,12 +3,19 @@
 @{
     ViewData["Title"] = "Create";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var ownerId = ViewData["OwnerId"];
+    var parentFolderId = ViewData["ParentFolderId"];
 }
 
-<h1>Create</h1>
+<head>
+    <h1>Create folder</h1>
+</head>
 
-<h4>Folder</h4>
-<hr />
+<body>
+<div>
+    <span>Actions:</span>
+    <a asp-action="Details" asp-route-id="@parentFolderId">Back</a>
+</div>
 <div class="row">
     <div class="col-md-4">
         <form enctype="multipart/form-data" asp-action="Create">
@@ -23,10 +30,10 @@
                 <input asp-for="ImageFile" type="file" class="form-control" />
             </div>
             <div class="form-group">
-                <input asp-for="OwnerId"  class="form-control" value="@ViewData["OwnerId"]" />
+                <input asp-for="OwnerId" type="hidden" class="form-control" value="@ownerId" />
             </div>
             <div class="form-group">
-                <input asp-for="ParentFolderId"  class="form-control" value="@ViewData["ParentFolderId"]" />
+                <input asp-for="ParentFolderId" type="hidden" class="form-control" value="@parentFolderId" />
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -34,10 +41,7 @@
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Details" asp-route-id="@ViewData["ParentFolderId"]">Back to List</a>
-</div>
+</body>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

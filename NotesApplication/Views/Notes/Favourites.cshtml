@@ -9,21 +9,38 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>Favourites</title>
+    <h1>Favourite notes</h1>
 </head>
 
 <body>
 <div>
-    @foreach(var note in Model) {
-        <div>
-            <p>Title: </p><a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a>
-            <p>Priority: </p><p>@note.Priority</p>
-            <p>Created: </p><p>@note.CreationDate<p>
+    <span>Actions:</span>
+    <a asp-controller="Home" asp-action="Index">Back</a>
+</div>
+<div>
+    @foreach (var note in Model)
+    {
+        var prio = "";
+        switch (note.Priority)
+        {
+            default:
+            case 1:
+                prio = "Normal";
+                break;
+            case 2:
+                prio = "High";
+                break;
+            case 3:
+                prio = "Critical";
+                break;
+        }
+        <div class="note @prio-prio">
+            <a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a> <span>@prio</span>
+            <p>@note.Text</p>
+            <p>@note.CreationDate</p>
         </div>
     }
 </div>
-<div>
-    <a asp-controller="Home" asp-action="Index">Back</a>
-</div>
+
 </body>
 </html>

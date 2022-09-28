@@ -5,10 +5,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Edit</h1>
+<head>
+    <img src="~/images/@Model.ImageFileName" width="50" height="50" />
+    <h1>Editing @Model.Title</h1>
+</head>
 
-<h4>Folder</h4>
-<hr />
+<body>
+<div>
+    <a asp-action="Details" asp-route-Id="@Model.Id">Back</a>
+</div>
+
 <div class="row">
     <div class="col-md-4">
         <form enctype="multipart/form-data" asp-action="Edit">
@@ -29,10 +35,8 @@
         </form>
     </div>
 </div>
+</body>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

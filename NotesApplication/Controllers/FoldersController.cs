@@ -66,7 +66,7 @@ namespace NotesApplication.Controllers
                 return Unauthorized();
             }
             var sort = String.IsNullOrEmpty(sortType) ? "title" : sortType;
-            var ascending = dir is null ? true : false;
+            var ascending = dir is null ? false : true;
 
             var childFolders = await _context.Folders.OrderBy(f => f.Title).Where(f => f.ParentFolder == folder).ToListAsync();
             var notes = new List<Note>();
@@ -119,12 +119,12 @@ namespace NotesApplication.Controllers
             return View();
         }
 
-        public async Task WriteFile(IFormFile file)
+        public async Task WriteFile(IFormFile file, string fileName)
         {
             var imagesPath = _webHostEnvironment.WebRootPath + "\\images\\";
             if (!Directory.Exists(imagesPath))
                 Directory.CreateDirectory(imagesPath);
-            var filePath = imagesPath + file.FileName;
+            var filePath = imagesPath + fileName;
 
             try
             {
@@ -155,32 +155,15 @@ namespace NotesApplication.Controllers
                     OwnerId = folderViewModel.OwnerId,
                     ParentFolderId = folderViewModel.ParentFolderId,
                 };
+
                 var file = folderViewModel.ImageFile;
-                await WriteFile(file);
-                folder.ImagePath = file.FileName;
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                await WriteFile(file, fileName);
+                folder.ImageFileName = fileName;
+
                 _context.Add(folder);
                 await _context.SaveChangesAsync();
-                /*var imagesPath = _webHostEnvironment.WebRootPath + "\\images\\";
-                if (!Directory.Exists(imagesPath))
-                    Directory.CreateDirectory(imagesPath);
-                var file = folderViewModel.ImageFile;
-                var filePath = imagesPath + file.FileName;
 
-                try
-                {
-                    var fileStream = new FileStream(filePath, FileMode.Create);
-                    using (fileStream)
-                    {
-                        await file.CopyToAsync(fileStream);
-                    }
-                    folder.ImagePath = file.FileName;
-                    _context.Add(folder);
-                    await _context.SaveChangesAsync();
-                }
-                catch (Exception e)
-                {
-                    throw;
-                }*/
                 return RedirectToAction("Details", folder);
             }
             ViewData["OwnerId"] = folderViewModel.OwnerId;
@@ -205,10 +188,15 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
+            if (folder.IsRoot)
+            {
+                return RedirectToAction("Details", folder);
+            }
             var folderViewModel = new FolderViewModel
             {
                 Id = folder.Id,
                 Title = folder.Title,
+                ImageFileName = folder.ImageFileName,
                 OwnerId = folder.OwnerId,
                 ParentFolderId = folder.ParentFolderId
             };
@@ -234,8 +222,9 @@ namespace NotesApplication.Controllers
             {
                 folder.Title = folderViewModel.Title;
                 var file = folderViewModel.ImageFile;
-                await WriteFile(file);
-                folder.ImagePath = file.FileName;
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                await WriteFile(file, fileName);
+                folder.ImageFileName = fileName;
 
                 try
                 {

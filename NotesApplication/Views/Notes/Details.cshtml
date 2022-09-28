@@ -9,25 +9,52 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
+    <h1>Note "@Model.Title"</h1>
 </head>
-<body>
 
+
+<body>
 <div>
-    <h4>Note</h4>
-    <hr />
+    <span>Actions:</span>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-controller="Folders" asp-action="Details" asp-route-id="@Model.ParentFolderId">Back</a>
+</div>
+<div>
+
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Text)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Text)
+            <textarea asp-for="Text" rows="10" cols="40" readonly></textarea>
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Priority)
+        </dt>
+        @{
+            var prio = "";
+            switch (Model.Priority)
+            {
+                default:
+                case 1:
+                    prio = "Normal";
+                    break;
+                case 2:
+                    prio = "High";
+                    break;
+                case 3:
+                    prio = "Critical";
+                    break;
+            }
+            <dd class="col-sm-10">
+                @prio
+            </dd>
+        }
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.IsFavourite)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.IsFavourite)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.CreationDate)
@@ -41,23 +68,8 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.EditDate)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Priority)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Priority)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ParentFolder)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ParentFolder.Id)
-        </dd>
+        
     </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-controller="Folders" asp-action="Details" asp-route-id="@Model.ParentFolderId">Back to List</a>
 </div>
 </body>
 </html>

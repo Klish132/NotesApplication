@@ -7,55 +7,72 @@
     var notes = ViewData["Notes"] as List<Note>;
 }
 
-<h1>Details</h1>
 
+<head>
+    <meta name="viewport" content="width=device-width" />
+    @if (!@Model.IsRoot)
+    {
+        <img src="~/images/@Model.ImageFileName" width="50" height="50" />
 
+    }
+    <h1>@Model.Title</h1>
+</head>
+
+<body>
 <div>
-    <p>Sort by:</p>
+    <span>Actions:</span>
+    <a asp-controller="Notes" asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create note</a> |
+    <a asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create folder</a>
+    @if (!@Model.IsRoot)
+    {
+        <span>| </span><a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a>
+        if (childFolders.Count == 0 && notes.Count == 0) {
+            <span>| </span><a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+        }
+        <span>| </span><a asp-action="Details" asp-route-id="@Model.ParentFolderId">Back</a>
+    }
+</div>
+<div>
+    <span>Sort by:</span>
     <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="title">Title</a> |
     <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="prio">Priority</a> |
     <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="date">Date</a>
 </div>
 <div>
-    <h4>Folder</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dd class="col-sm-10">
-            <img src="~/images/@Model.ImagePath" />
-        </dd>
-        
-    </dl>
-</div>
-<div>
     @foreach (var folder in childFolders)
     {
-        <div>
-            <p>Folder title: </p><a asp-controller="Folders" asp-action="Details" asp-route-id="@folder?.Id">@folder.Title</a>
-            <p>Folder image: </p><p>@folder.ImagePath</p>
+        <div class="folder">
+            <img src="~/images/@folder.ImageFileName" width="25" height="25"> <h3><a asp-controller="Folders" asp-action="Details" asp-route-id="@folder?.Id">@folder.Title</a></h3>
         </div>
     }
 
     @foreach (var note in notes)
     {
-        <div>
-            <p>Note title: </p><a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a>
-            <p>Note text: </p><p>@note.Text</p>
-            <p>Priority: </p><p>@note.Priority</p>
-            <p>Created: </p><p>@note.CreationDate<p>
+        var prio = "";
+        switch (note.Priority) {
+            default:
+            case 1:
+                prio = "Normal";
+                break;
+            case 2:
+                prio = "High";
+                break;
+            case 3:
+                prio = "Critical";
+                break;
+        }
+        <div class="note @prio-prio">
+            <h3><a asp-controller="Notes" asp-action="Details" asp-route-id="@note?.Id">@note.Title</a></h3> <span style="float: right">@prio</span>
+            @if (note.Text.Length > 15) {
+                <p>@note.Text.Substring(0, 15)...</p>
+            } else {
+                <p>@note.Text</p>
+            }
+            <p>@note.CreationDate</p>
         </div>
     }
 </div>
-<div>
-    <a asp-controller="Notes" asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create note</a> |
-    <a asp-action="Create" asp-route-parentFolderId="@Model?.Id">Create folder</a> |
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    @if(!Model.IsRoot) {
-        <a asp-action="Details" asp-route-id="@Model.ParentFolderId">Back to List</a>
-    }
-</div>
+</body>
+
+
+
