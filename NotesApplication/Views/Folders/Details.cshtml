@@ -26,11 +26,8 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Title)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Image)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Image)
+        <dd class="col-sm-10">
+            <img src="~/images/@Model.ImagePath" />
         </dd>
         
     </dl>
@@ -40,7 +37,7 @@
     {
         <div>
             <p>Folder title: </p><a asp-controller="Folders" asp-action="Details" asp-route-id="@folder?.Id">@folder.Title</a>
-            <p>Folder image: </p><p>@folder.Image</p>
+            <p>Folder image: </p><p>@folder.ImagePath</p>
         </div>
     }
 

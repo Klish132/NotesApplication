@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -7,8 +8,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.Internal;
 using NotesApplication.Data;
 using NotesApplication.Models;
+using NotesApplication.ViewModels;
+using static System.Net.WebRequestMethods;
 using static NuGet.Packaging.PackagingConstants;
 
 namespace NotesApplication.Controllers
@@ -17,11 +21,13 @@ namespace NotesApplication.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public FoldersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public FoldersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment; 
         }
 
         // GET: Folders
@@ -113,22 +119,73 @@ namespace NotesApplication.Controllers
             return View();
         }
 
+        public async Task WriteFile(IFormFile file)
+        {
+            var imagesPath = _webHostEnvironment.WebRootPath + "\\images\\";
+            if (!Directory.Exists(imagesPath))
+                Directory.CreateDirectory(imagesPath);
+            var filePath = imagesPath + file.FileName;
+
+            try
+            {
+                var fileStream = new FileStream(filePath, FileMode.Create);
+                using (fileStream)
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
         // POST: Folders/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Image,OwnerId,ParentFolderId")] Folder folder)
+        public async Task<IActionResult> Create(FolderViewModel folderViewModel)
         {
             if (ModelState.IsValid)
             {
+                var folder = new Folder
+                {
+                    Title = folderViewModel.Title,
+                    OwnerId = folderViewModel.OwnerId,
+                    ParentFolderId = folderViewModel.ParentFolderId,
+                };
+                var file = folderViewModel.ImageFile;
+                await WriteFile(file);
+                folder.ImagePath = file.FileName;
                 _context.Add(folder);
                 await _context.SaveChangesAsync();
+                /*var imagesPath = _webHostEnvironment.WebRootPath + "\\images\\";
+                if (!Directory.Exists(imagesPath))
+                    Directory.CreateDirectory(imagesPath);
+                var file = folderViewModel.ImageFile;
+                var filePath = imagesPath + file.FileName;
+
+                try
+                {
+                    var fileStream = new FileStream(filePath, FileMode.Create);
+                    using (fileStream)
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
+                    folder.ImagePath = file.FileName;
+                    _context.Add(folder);
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }*/
                 return RedirectToAction("Details", folder);
             }
-            ViewData["OwnerId"] = folder.OwnerId;
-            ViewData["ParentFolderId"] = folder.ParentFolderId;
-            return View(folder);
+            ViewData["OwnerId"] = folderViewModel.OwnerId;
+            ViewData["ParentFolderId"] = folderViewModel.ParentFolderId;
+            return View(folderViewModel);
         }
 
         // GET: Folders/Edit/5
@@ -148,9 +205,16 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
+            var folderViewModel = new FolderViewModel
+            {
+                Id = folder.Id,
+                Title = folder.Title,
+                OwnerId = folder.OwnerId,
+                ParentFolderId = folder.ParentFolderId
+            };
             ViewData["OwnerId"] = folder.OwnerId;
             ViewData["ParentFolderId"] = folder.ParentFolderId;
-            return View(folder);
+            return View(folderViewModel);
         }
 
         // POST: Folders/Edit/5
@@ -158,15 +222,21 @@ namespace NotesApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Image")] Folder folder)
+        public async Task<IActionResult> Edit(int id, FolderViewModel folderViewModel)
         {
-            if (id != folder.Id)
+            var folder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folderViewModel.Id);
+            if (id != folderViewModel.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
+                folder.Title = folderViewModel.Title;
+                var file = folderViewModel.ImageFile;
+                await WriteFile(file);
+                folder.ImagePath = file.FileName;
+
                 try
                 {
                     _context.Update(folder);
@@ -185,9 +255,9 @@ namespace NotesApplication.Controllers
                 }
                 return RedirectToAction("Details", folder);
             }
-            ViewData["OwnerId"] = folder.OwnerId;
-            ViewData["ParentFolderId"] = folder.ParentFolderId;
-            return View(folder);
+            ViewData["OwnerId"] = folderViewModel.OwnerId;
+            ViewData["ParentFolderId"] = folderViewModel.ParentFolderId;
+            return View(folderViewModel);
         }
 
         // GET: Folders/Delete/5
@@ -228,7 +298,7 @@ namespace NotesApplication.Controllers
                 return Problem("Entity set 'ApplicationDbContext.Folders'  is null.");
             }
             var folder = await _context.Folders.FindAsync(id);
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(f => f.ParentFolder == folder);
+            var parentFolder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folder.ParentFolderId);
             if (folder != null)
             {
                 _context.Folders.Remove(folder);

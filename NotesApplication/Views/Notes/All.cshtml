@@ -12,7 +12,14 @@
     <title>All notes</title>
 </head>
 
+
 <body>
+    <div>
+        <form asp-action="All">
+            Search by title: <input name="searchQuery" class="form-control" />
+            <input type="submit" value="Search" class="btn btn-primary" />
+        </form>
+    </div>
 <div>
     @foreach(var note in Model) {
         <div>
