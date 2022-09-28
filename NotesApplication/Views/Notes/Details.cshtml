@@ -17,6 +17,7 @@
 <div>
     <span>Actions:</span>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Delete" asp-route-id="@Model.Id">Delete</a> |
     <a asp-controller="Folders" asp-action="Details" asp-route-id="@Model.ParentFolderId">Back</a>
 </div>
 <div>

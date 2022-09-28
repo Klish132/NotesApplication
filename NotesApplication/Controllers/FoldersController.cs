@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting.Internal;
 using NotesApplication.Data;
 using NotesApplication.Models;
 using NotesApplication.ViewModels;
-using static System.Net.WebRequestMethods;
-using static NuGet.Packaging.PackagingConstants;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace NotesApplication.Controllers
 {
+    [Route("[controller]")]
+    [ApiController]
     public class FoldersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -27,26 +21,12 @@ namespace NotesApplication.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _webHostEnvironment = webHostEnvironment; 
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Folders
-        /*public async Task<IActionResult> Index()
-        {
-            var applicationDbContext = _context.Folders.Include(f => f.Owner).Include(f => f.ParentFolder);
-            return View(await applicationDbContext.ToListAsync());
-        }*/
-
-        public List<Folder> GetChildFolders(int id)
-        {
-            return _context.Folders.Where(f => f.ParentFolderId == id).ToList();
-        }
-        public List<Note> GetNotes(int id)
-        {
-            return _context.Notes.Where(f => f.ParentFolderId == id).ToList();
-        }
-
-        // GET: Folders/Details/5
+        [SwaggerOperation(Summary = "Информация о папке, включая все лежащие в ней папки и заметки.")]
+        [HttpGet]
+        [Route("Details/{id}")]
         public async Task<IActionResult> Details(int? id, string? sortType, bool? dir)
         {
             if (id == null || _context.Folders == null)
@@ -111,15 +91,8 @@ namespace NotesApplication.Controllers
             return View(folder);
         }
 
-        // GET: Folders/Create
-        public IActionResult Create(int? parentFolderId)
-        {
-            ViewData["OwnerId"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            ViewData["ParentFolderId"] = parentFolderId;
-            return View();
-        }
-
-        public async Task WriteFile(IFormFile file, string fileName)
+        [NonAction]
+        private async Task WriteFile(IFormFile file, string fileName)
         {
             var imagesPath = _webHostEnvironment.WebRootPath + "\\images\\";
             if (!Directory.Exists(imagesPath))
@@ -140,12 +113,21 @@ namespace NotesApplication.Controllers
             }
         }
 
-        // POST: Folders/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [SwaggerOperation(Summary = "Для страницы создания папки.")]
+        [HttpGet]
+        [Route("Create/")]
+        public IActionResult Create(int? parentFolderId)
+        {
+            ViewData["OwnerId"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewData["ParentFolderId"] = parentFolderId;
+            return View();
+        }
+
+        [SwaggerOperation(Summary = "Создает папку.")]
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FolderViewModel folderViewModel)
+        public async Task<IActionResult> Create([FromForm]FolderViewModel folderViewModel)
         {
             if (ModelState.IsValid)
             {
@@ -171,7 +153,9 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
-        // GET: Folders/Edit/5
+        [SwaggerOperation(Summary = "Для страницы редактирования папки.")]
+        [HttpGet]
+        [Route("Edit/{id?}")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Folders == null)
@@ -205,14 +189,12 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
-        // POST: Folders/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [SwaggerOperation(Summary = "Редактирует папку.")]
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, FolderViewModel folderViewModel)
+        public async Task<IActionResult> Edit(int id, [FromForm]FolderViewModel folderViewModel)
         {
-            var folder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folderViewModel.Id);
             if (id != folderViewModel.Id)
             {
                 return NotFound();
@@ -220,6 +202,8 @@ namespace NotesApplication.Controllers
 
             if (ModelState.IsValid)
             {
+                var folder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folderViewModel.Id);
+
                 folder.Title = folderViewModel.Title;
                 var file = folderViewModel.ImageFile;
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -249,7 +233,9 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
-        // GET: Folders/Delete/5
+        [SwaggerOperation(Summary = "Для страницы удаления папки.")]
+        [HttpGet]
+        [Route("Delete/{id?}")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Folders == null)
@@ -277,9 +263,10 @@ namespace NotesApplication.Controllers
             return View(folder);
         }
 
-        // POST: Folders/Delete/5
+        [SwaggerOperation(Summary = "Удаляет папку.")]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Delete/{id}")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Folders == null)

@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using NotesApplication.Data;
 using NotesApplication.Models;
-using static NuGet.Packaging.PackagingConstants;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace NotesApplication.Controllers
 {
+    [Route("[controller]")]
+    [ApiController]
     public class NotesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,21 +22,29 @@ namespace NotesApplication.Controllers
             _userManager = userManager;
         }
 
-        // GET: Notes
-        public async Task<IActionResult> All(string? searchQuery)
+        [SwaggerOperation(Summary = "Get: Получает все заметки пользователя. Post: для поиска по названиям.")]
+        [HttpGet]
+        [HttpPost]
+        [Route("All/")]
+        public async Task<IActionResult> All([FromForm]string? searchQuery)
         {
             var query = String.IsNullOrEmpty(searchQuery) ? "" : searchQuery;
             var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier) && n.Title.ToUpper().Contains(query.ToUpper())).ToListAsync();
             return View(notes);
         }
 
+        [SwaggerOperation(Summary = "Избранные заметки.")]
+        [HttpGet]
+        [Route("Favourites/")]
         public async Task<IActionResult> Favourites()
         {
             var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier) && n.IsFavourite == true).ToListAsync();
             return View(notes);
         }
 
-        // GET: Notes/Details/5
+        [SwaggerOperation(Summary = "Информация о заметке.")]
+        [HttpGet]
+        [Route("Details/{id?}")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Notes == null)
@@ -62,19 +68,20 @@ namespace NotesApplication.Controllers
             return View(note);
         }
 
-        // GET: Notes/Create
+        [SwaggerOperation(Summary = "Для страницы создания заметки.")]
+        [HttpGet]
+        [Route("Create/")]
         public IActionResult Create(int? parentFolderId)
         {
             ViewData["ParentFolderId"] = parentFolderId;
             return View();
         }
 
-        // POST: Notes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [SwaggerOperation(Summary = "Создает заметку.")]
         [HttpPost]
+        [Route("Create/")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Text,IsFavourite,Priority,ParentFolderId")] Note note)
+        public async Task<IActionResult> Create([FromForm]Note note)
         {
             if (ModelState.IsValid)
             {
@@ -82,11 +89,14 @@ namespace NotesApplication.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Details", note);
             }
+
             ViewData["ParentFolderId"] = note.ParentFolderId;
             return View(note);
         }
 
-        // GET: Notes/Edit/5
+        [SwaggerOperation(Summary = "Для страницы редактирования заметки.")]
+        [HttpGet]
+        [Route("Edit/{id?}")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Notes == null)
@@ -104,27 +114,32 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
-            //var folders = await _context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
             var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)), "Id", "Title");
             ViewData["Folders"] = folders;
             return View(note);
         }
 
-        // POST: Notes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [SwaggerOperation(Summary = "Редактирует заметку.")]
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Text,IsFavourite,Priority,ParentFolderId")] Note note)
+        public async Task<IActionResult> Edit(int id, [FromForm]Note editedNote)
         {
-            if (id != note.Id)
+            if (id != editedNote.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
+                var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == editedNote.Id);
+
+                note.Title = editedNote.Title;
+                note.Text = editedNote.Text;
+                note.IsFavourite = editedNote.IsFavourite;
+                note.Priority = editedNote.Priority;
                 note.EditDate = DateTime.UtcNow;
+                note.ParentFolderId = editedNote.ParentFolderId;
                 try
                 {
                     _context.Update(note);
@@ -145,10 +160,12 @@ namespace NotesApplication.Controllers
             }
             var folders = await _context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
             ViewData["Folders"] = folders;
-            return View(note);
+            return View(editedNote);
         }
 
-        // GET: Notes/Delete/5
+        [SwaggerOperation(Summary = "Для страницы удаления заметки.")]
+        [HttpGet]
+        [Route("Delete/{id?}")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Notes == null)
@@ -172,10 +189,11 @@ namespace NotesApplication.Controllers
             return View(note);
         }
 
-        // POST: Notes/Delete/5
+        [SwaggerOperation(Summary = "Удаляет заметку.")]
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (_context.Notes == null)
             {

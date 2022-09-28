@@ -162,7 +162,7 @@ namespace NotesApplication.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    ImagePath = table.Column<string>(type: "text", nullable: false),
+                    ImageFileName = table.Column<string>(type: "text", nullable: false),
                     IsRoot = table.Column<bool>(type: "boolean", nullable: false),
                     OwnerId = table.Column<string>(type: "text", nullable: false),
                     ParentFolderId = table.Column<int>(type: "integer", nullable: true)
@@ -189,11 +189,11 @@ namespace NotesApplication.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Text = table.Column<string>(type: "text", nullable: false),
+                    Title = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
+                    Text = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     IsFavourite = table.Column<bool>(type: "boolean", nullable: false),
-                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EditDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    EditDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Priority = table.Column<int>(type: "integer", nullable: false),
                     ParentFolderId = table.Column<int>(type: "integer", nullable: false)
                 },

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using NotesApp;
 using NotesApplication.Data;
 using NotesApplication.Models;
@@ -18,6 +19,12 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSwaggerGen(options => {
+    options.EnableAnnotations();
+    options.SwaggerDoc("v1",
+        new OpenApiInfo { Title = "Notes RESTful API", Version = "v1" });
+});
 
 var app = builder.Build();
 
@@ -41,11 +48,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}");
+
 app.MapRazorPages();
 
-//app.Populate();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.Run();
