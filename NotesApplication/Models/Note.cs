@@ -13,9 +13,9 @@ namespace NotesApplication.Models
         [DisplayName("Favourite?")]
         public bool IsFavourite { get; set; } = false;
         [DisplayName("Created")]
-        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreationDate { get; set; } = DateTime.UtcNow;
         [DisplayName("Last edited")]
-        public DateTime EditDate { get; set; } = DateTime.UtcNow;
+        public DateTime? EditDate { get; set; } = DateTime.UtcNow;
         public int Priority { get; set; } = 1;
         [DisplayName("Folder")]
         public int ParentFolderId { get; set; }

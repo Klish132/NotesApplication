@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NotesApplication.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220927094054_InitialDatabase")]
+    [Migration("20220928150941_InitialDatabase")]
     partial class InitialDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -232,7 +232,7 @@ namespace NotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ImagePath")
+                    b.Property<string>("ImageFileName")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -267,10 +267,10 @@ namespace NotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationDate")
+                    b.Property<DateTime?>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("EditDate")
+                    b.Property<DateTime?>("EditDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsFavourite")
@@ -284,11 +284,13 @@ namespace NotesApplication.Migrations
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
 
                     b.HasKey("Id");
 
