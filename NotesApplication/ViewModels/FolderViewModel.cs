@@ -9,6 +9,7 @@ namespace NotesApplication.ViewModels
         public string Title { get; set; } = "";
         [DisplayName("Upload Image")]
         public IFormFile ImageFile { get; set; }
+        public string? ImageFileName { get; set; }
         public string? OwnerId { get; set; }
         public int? ParentFolderId { get; set; }
 

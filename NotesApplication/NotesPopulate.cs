@@ -24,7 +24,7 @@ namespace NotesApp
             context.Folders.Add(new Folder
             {
                 Title = "Today's notes",
-                ImagePath = "*link*",
+                ImageFileName = "*link*",
                 Notes = notes
             });
 

@@ -104,7 +104,9 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
-            ViewData["ParentFolderId"] = note.ParentFolderId;
+            //var folders = await _context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
+            var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)), "Id", "Title");
+            ViewData["Folders"] = folders;
             return View(note);
         }
 
@@ -141,7 +143,8 @@ namespace NotesApplication.Controllers
                 }
                 return RedirectToAction("Details", note);
             }
-            ViewData["ParentFolderId"] = note.ParentFolderId;
+            var folders = await _context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
+            ViewData["Folders"] = folders;
             return View(note);
         }
 

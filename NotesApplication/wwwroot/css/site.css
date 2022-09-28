@@ -16,3 +16,38 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.folder {
+    border-radius: 15px;
+    border: 2px solid black;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+h3, h1 {
+    display: inline;
+}
+
+.note {
+    float: left;
+    border-radius: 15px;
+    border: 2px solid black;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-right: 5px;
+    width: 150px;
+    display: inline-block;
+}
+
+.Normal-prio {
+    border-color: green;
+}
+
+.High-prio {
+    border-color: orange;
+}
+
+.Critical-prio {
+    border-color: red;
+}
