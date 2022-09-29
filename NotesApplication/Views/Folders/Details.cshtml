@@ -1,7 +1,7 @@
 ﻿@model NotesApplication.Models.Folder
 
 @{
-    ViewData["Title"] = "Details";
+    ViewBag.Title = Model.Title + "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var childFolders = ViewData["ChildFolders"] as List<Folder>;
     var notes = ViewData["Notes"] as List<Note>;

@@ -1,6 +1,7 @@
 ﻿@model NotesApplication.Models.Note
 
 @{
+    ViewBag.Title = "Editing" + Model.Title;
     Layout = "_Layout";
     var selectItems = new List<SelectListItem> {
         new SelectListItem { Value="1", Text="Normal" },
