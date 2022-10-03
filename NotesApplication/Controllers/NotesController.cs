@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,26 +23,30 @@ namespace NotesApplication.Controllers
             _userManager = userManager;
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Get: Получает все заметки пользователя. Post: для поиска по названиям.")]
-        [HttpGet]
         [HttpPost]
-        [Route("All/")]
+        [Route("All")]
         public async Task<IActionResult> All([FromForm]string? searchQuery)
         {
-            var query = String.IsNullOrEmpty(searchQuery) ? "" : searchQuery;
-            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier) && n.Title.ToUpper().Contains(query.ToUpper())).ToListAsync();
+            var query = String.IsNullOrEmpty(searchQuery) ? "" : searchQuery.ToUpper();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == userId && n.Title.ToUpper().Contains(query)).ToListAsync();
             return View(notes);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Избранные заметки.")]
         [HttpGet]
-        [Route("Favourites/")]
+        [Route("Favourites")]
         public async Task<IActionResult> Favourites()
         {
-            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier) && n.IsFavourite == true).ToListAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var notes = await _context.Notes.Where(n => n.ParentFolder.OwnerId == userId && n.IsFavourite == true).ToListAsync();
             return View(notes);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Информация о заметке.")]
         [HttpGet]
         [Route("Details/{id?}")]
@@ -52,13 +57,12 @@ namespace NotesApplication.Controllers
                 return NotFound();
             }
 
-            var note = await _context.Notes
-                .Include(n => n.ParentFolder)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var note = await _context.Notes.FindAsync(id);
             if (note == null)
             {
                 return NotFound();
             }
+
             var parentFolder = await _context.Folders.FirstOrDefaultAsync(n => n.Id == note.ParentFolderId);
             if (parentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
@@ -68,18 +72,20 @@ namespace NotesApplication.Controllers
             return View(note);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы создания заметки.")]
         [HttpGet]
-        [Route("Create/")]
+        [Route("Create")]
         public IActionResult Create(int? parentFolderId)
         {
             ViewData["ParentFolderId"] = parentFolderId;
             return View();
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Создает заметку.")]
         [HttpPost]
-        [Route("Create/")]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm]Note note)
         {
@@ -94,6 +100,7 @@ namespace NotesApplication.Controllers
             return View(note);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы редактирования заметки.")]
         [HttpGet]
         [Route("Edit/{id?}")]
@@ -114,11 +121,13 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
+
             var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)), "Id", "Title");
             ViewData["Folders"] = folders;
             return View(note);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Редактирует заметку.")]
         [HttpPost]
         [Route("Edit/{id}")]
@@ -138,7 +147,7 @@ namespace NotesApplication.Controllers
                 note.Text = editedNote.Text;
                 note.IsFavourite = editedNote.IsFavourite;
                 note.Priority = editedNote.Priority;
-                note.EditDate = DateTime.UtcNow;
+                note.EditDate = DateTimeOffset.UtcNow;
                 note.ParentFolderId = editedNote.ParentFolderId;
                 try
                 {
@@ -163,6 +172,7 @@ namespace NotesApplication.Controllers
             return View(editedNote);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы удаления заметки.")]
         [HttpGet]
         [Route("Delete/{id?}")]
@@ -173,9 +183,7 @@ namespace NotesApplication.Controllers
                 return NotFound();
             }
 
-            var note = await _context.Notes
-                .Include(n => n.ParentFolder)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var note = await _context.Notes.FindAsync(id);
             if (note == null)
             {
                 return NotFound();
@@ -189,6 +197,7 @@ namespace NotesApplication.Controllers
             return View(note);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Удаляет заметку.")]
         [HttpPost]
         [Route("Delete/{id}")]

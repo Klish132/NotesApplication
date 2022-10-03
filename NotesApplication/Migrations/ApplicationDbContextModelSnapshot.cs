@@ -265,10 +265,10 @@ namespace NotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("CreationDate")
+                    b.Property<DateTimeOffset?>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("EditDate")
+                    b.Property<DateTimeOffset?>("EditDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsFavourite")

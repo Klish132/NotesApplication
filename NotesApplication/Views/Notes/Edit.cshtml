@@ -1,12 +1,8 @@
 ﻿@model NotesApplication.Models.Note
 
 @{
+    ViewBag.Title = "Editing" + Model.Title;
     Layout = "_Layout";
-    var selectItems = new List<SelectListItem> {
-        new SelectListItem { Value="1", Text="Normal" },
-        new SelectListItem { Value="2", Text="High" },
-        new SelectListItem { Value="3", Text="Critical" }
-    };
     var folders = ViewData["Folders"] as SelectList;
 }
 
@@ -42,7 +38,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Priority" class="control-label"></label>
-                @Html.DropDownListFor(model => model.Priority, selectItems)
+                @Html.DropDownListFor(model => model.Priority, @Html.GetEnumSelectList(typeof(Note.NotePriority)))
                 <span asp-validation-for="Priority" class="text-danger"></span>
             </div>
             <div class="form-check">

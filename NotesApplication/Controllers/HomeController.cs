@@ -30,7 +30,7 @@ namespace NotesApp.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId != null)
             {
-                var rootFolder = await _context.Folders.FirstOrDefaultAsync(f => f.IsRoot == true && f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var rootFolder = await _context.Folders.FirstOrDefaultAsync(f => f.OwnerId == userId && f.IsRoot == true);
                 if (rootFolder != null)
                     return RedirectToRoute(new {controller = "Folders", action="Details", id = rootFolder.Id });
             }

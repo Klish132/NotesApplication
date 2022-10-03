@@ -1,6 +1,7 @@
 ﻿@model ICollection<NotesApplication.Models.Note>
 
 @{
+    ViewBag.Title = "Favourite notes";
     Layout = "_Layout";
 }
 
@@ -24,13 +25,13 @@
         switch (note.Priority)
         {
             default:
-            case 1:
+            case Note.NotePriority.Normal:
                 prio = "Normal";
                 break;
-            case 2:
+            case Note.NotePriority.High:
                 prio = "High";
                 break;
-            case 3:
+            case Note.NotePriority.Critical:
                 prio = "Critical";
                 break;
         }

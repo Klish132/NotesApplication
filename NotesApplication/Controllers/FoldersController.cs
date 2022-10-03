@@ -1,4 +1,6 @@
-﻿using System.Security.Claims;
+﻿using System.ComponentModel;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +11,18 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace NotesApplication.Controllers
 {
+
     [Route("[controller]")]
     [ApiController]
     public class FoldersController : Controller
     {
+        public enum SortType
+        {
+            Title,
+            Priority,
+            Date
+        }
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -24,10 +34,11 @@ namespace NotesApplication.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Информация о папке, включая все лежащие в ней папки и заметки.")]
         [HttpGet]
         [Route("Details/{id}")]
-        public async Task<IActionResult> Details(int? id, string? sortType, bool? dir)
+        public async Task<IActionResult> Details(int? id, int? sortType, bool? dir)
         {
             if (id == null || _context.Folders == null)
             {
@@ -45,7 +56,7 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
-            var sort = String.IsNullOrEmpty(sortType) ? "title" : sortType;
+            var sort =  sortType is null ? (int)SortType.Title : sortType;
             var ascending = dir is null ? false : true;
 
             var childFolders = await _context.Folders.OrderBy(f => f.Title).Where(f => f.ParentFolder == folder).ToListAsync();
@@ -55,13 +66,13 @@ namespace NotesApplication.Controllers
             {
                 switch (sort)
                 {
-                    case "title":
+                    case (int)SortType.Title:
                         notes = await _context.Notes.OrderBy(n => n.Title).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
-                    case "prio":
+                    case (int)SortType.Priority:
                         notes = await _context.Notes.OrderBy(n => n.Priority).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
-                    case "date":
+                    case (int)SortType.Date:
                         notes = await _context.Notes.OrderBy(n => n.CreationDate).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
                     default:
@@ -72,13 +83,13 @@ namespace NotesApplication.Controllers
             {
                 switch (sort)
                 {
-                    case "title":
+                    case (int)SortType.Title:
                         notes = await _context.Notes.OrderByDescending(n => n.Title).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
-                    case "prio":
+                    case (int)SortType.Priority:
                         notes = await _context.Notes.OrderByDescending(n => n.Priority).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
-                    case "date":
+                    case (int)SortType.Date:
                         notes = await _context.Notes.OrderByDescending(n => n.CreationDate).Where(n => n.ParentFolder == folder).ToListAsync();
                         break;
                     default:
@@ -113,9 +124,10 @@ namespace NotesApplication.Controllers
             }
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы создания папки.")]
         [HttpGet]
-        [Route("Create/")]
+        [Route("Create")]
         public IActionResult Create(int? parentFolderId)
         {
             ViewData["OwnerId"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -123,6 +135,7 @@ namespace NotesApplication.Controllers
             return View();
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Создает папку.")]
         [HttpPost]
         [Route("Create")]
@@ -153,6 +166,7 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы редактирования папки.")]
         [HttpGet]
         [Route("Edit/{id?}")]
@@ -189,6 +203,7 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Редактирует папку.")]
         [HttpPost]
         [Route("Edit/{id}")]
@@ -233,6 +248,7 @@ namespace NotesApplication.Controllers
             return View(folderViewModel);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Для страницы удаления папки.")]
         [HttpGet]
         [Route("Delete/{id?}")]
@@ -263,6 +279,7 @@ namespace NotesApplication.Controllers
             return View(folder);
         }
 
+        [Authorize]
         [SwaggerOperation(Summary = "Удаляет папку.")]
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -1,7 +1,7 @@
 ﻿@model NotesApplication.Models.Folder
 
 @{
-    ViewData["Title"] = "Details";
+    ViewBag.Title = Model.Title + "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var childFolders = ViewData["ChildFolders"] as List<Folder>;
     var notes = ViewData["Notes"] as List<Note>;
@@ -34,9 +34,9 @@
 </div>
 <div>
     <span>Sort by:</span>
-    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="title">Title</a> |
-    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="prio">Priority</a> |
-    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="date">Date</a>
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="0">Title</a> |
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="1">Priority</a> |
+    <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="2">Date</a>
 </div>
 <div>
     @foreach (var folder in childFolders)
@@ -51,13 +51,13 @@
         var prio = "";
         switch (note.Priority) {
             default:
-            case 1:
+            case Note.NotePriority.Normal:
                 prio = "Normal";
                 break;
-            case 2:
+            case Note.NotePriority.High:
                 prio = "High";
                 break;
-            case 3:
+            case Note.NotePriority.Critical:
                 prio = "Critical";
                 break;
         }
