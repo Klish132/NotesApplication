@@ -5,6 +5,13 @@ namespace NotesApplication.Models
 {
     public class Note
     {
+        public enum NotePriority
+        {
+            Normal,
+            High,
+            Critical,
+        }
+
         public int Id { get; set; }
         [StringLength(15)]
         public string Title { get; set; } = "";
@@ -13,30 +20,12 @@ namespace NotesApplication.Models
         [DisplayName("Favourite?")]
         public bool IsFavourite { get; set; } = false;
         [DisplayName("Created")]
-        public DateTime? CreationDate { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset? CreationDate { get; set; } = DateTimeOffset.UtcNow;
         [DisplayName("Last edited")]
-        public DateTime? EditDate { get; set; } = DateTime.UtcNow;
-        public int Priority { get; set; } = 1;
+        public DateTimeOffset? EditDate { get; set; } = DateTimeOffset.UtcNow;
+        public NotePriority Priority { get; set; } = NotePriority.Normal;
         [DisplayName("Folder")]
         public int ParentFolderId { get; set; }
         public virtual Folder? ParentFolder { get; set; }
-
-    }
-
-    public class Folder
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        [DisplayName("Upload Image")]
-        public string ImageFileName { get; set; } = "";
-        public bool IsRoot { get; set; } = false;
-        public string OwnerId { get; set; }
-        public virtual ApplicationUser? Owner { get; set; }
-        [DisplayName("Folder")]
-        public int? ParentFolderId { get; set; }
-        public virtual Folder? ParentFolder { get; set; }
-        public virtual List<Folder>? ChildFolders { get; set; }
-
-        public virtual List<Note>? Notes { get; set; }
     }
 }

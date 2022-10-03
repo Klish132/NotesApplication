@@ -25,7 +25,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         // So, use a local Connection
         Console.WriteLine("Dev");
-        options.UseNpgsql(builder.Configuration.GetConnectionString("HerokuDB"));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("NotesDB"));
     }
 });
 
