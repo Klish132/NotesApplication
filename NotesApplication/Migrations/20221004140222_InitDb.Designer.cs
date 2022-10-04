@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NotesApplication.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20221003150113_InitialDatabase")]
-    partial class InitialDatabase
+    [Migration("20221004140222_InitDb")]
+    partial class InitDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -267,10 +267,10 @@ namespace NotesApplication.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTimeOffset?>("CreationDate")
+                    b.Property<DateTimeOffset>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset?>("EditDate")
+                    b.Property<DateTimeOffset>("EditDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsFavourite")

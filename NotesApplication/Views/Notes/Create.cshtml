@@ -1,4 +1,4 @@
-﻿@model NotesApplication.Models.Note
+﻿@model NotesApplication.ViewModels.NoteViewModel
 
 @{
     ViewBag.Title = "Create note";
@@ -46,7 +46,7 @@
                 <span asp-validation-for="IsFavourite" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="hidden" asp-for="ParentFolderId" class="form-control" value="@parentFolderId" />
+                <input type="hidden" asp-for="ParentFolderId" class="form-control" value="@Model.ParentFolderId" />
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

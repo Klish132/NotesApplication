@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NotesApplication.Models
 {
@@ -10,12 +11,10 @@ namespace NotesApplication.Models
         public string ImageFileName { get; set; } = "";
         public bool IsRoot { get; set; } = false;
         public string OwnerId { get; set; }
-        public virtual ApplicationUser? Owner { get; set; }
-        [DisplayName("Folder")]
+        public  ApplicationUser? Owner { get; set; }
         public int? ParentFolderId { get; set; }
-        public virtual Folder? ParentFolder { get; set; }
-        public virtual List<Folder>? ChildFolders { get; set; }
-
-        public virtual List<Note>? Notes { get; set; }
+        public  Folder? ParentFolder { get; set; }
+        public  List<Folder>? ChildFolders { get; set; }
+        public  List<Note>? Notes { get; set; }
     }
 }

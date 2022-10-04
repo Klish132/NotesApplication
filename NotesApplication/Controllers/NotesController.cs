@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using NotesApplication.Data;
 using NotesApplication.Models;
+using NotesApplication.ViewModels;
 using Swashbuckle.AspNetCore.Annotations;
+using static NuGet.Packaging.PackagingConstants;
 
 namespace NotesApplication.Controllers
 {
@@ -50,21 +52,14 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Информация о заметке.")]
         [HttpGet]
         [Route("Details/{id?}")]
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.Notes == null)
-            {
-                return NotFound();
-            }
-
-            var note = await _context.Notes.FindAsync(id);
+            var note = await _context.Notes.Include(n => n.ParentFolder).FirstOrDefaultAsync(n => n.Id == id);
             if (note == null)
             {
                 return NotFound();
             }
-
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(n => n.Id == note.ParentFolderId);
-            if (parentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            if (note.ParentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 return Unauthorized();
             }
@@ -76,10 +71,10 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Для страницы создания заметки.")]
         [HttpGet]
         [Route("Create")]
-        public IActionResult Create(int? parentFolderId)
+        public IActionResult Create(int parentFolderId)
         {
-            ViewData["ParentFolderId"] = parentFolderId;
-            return View();
+            var noteViewModel = new NoteViewModel{ ParentFolderId = parentFolderId };
+            return View(noteViewModel);
         }
 
         [Authorize]
@@ -87,44 +82,58 @@ namespace NotesApplication.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm]Note note)
+        public async Task<IActionResult> Create([FromForm]NoteViewModel noteViewModel)
         {
             if (ModelState.IsValid)
             {
+                var note = new Note
+                {
+                    Title = noteViewModel.Title,
+                    Text = noteViewModel.Text,
+                    IsFavourite = noteViewModel.IsFavourite,
+                    CreationDate = DateTimeOffset.UtcNow,
+                    EditDate = DateTimeOffset.UtcNow,
+                    Priority = noteViewModel.Priority,
+                    ParentFolderId = noteViewModel.ParentFolderId,
+                };
+
                 _context.Add(note);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Details", note);
+                return RedirectToAction("Details", new { id = note.Id });
             }
-
-            ViewData["ParentFolderId"] = note.ParentFolderId;
-            return View(note);
+            return View(noteViewModel);
         }
 
         [Authorize]
         [SwaggerOperation(Summary = "Для страницы редактирования заметки.")]
         [HttpGet]
         [Route("Edit/{id?}")]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Notes == null)
-            {
-                return NotFound();
-            }
-
-            var note = await _context.Notes.FindAsync(id);
+            var note = await _context.Notes.Include(n => n.ParentFolder).FirstOrDefaultAsync(n => n.Id == id);
             if (note == null)
             {
                 return NotFound();
             }
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(n => n.Id == note.ParentFolderId);
-            if (parentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (note.ParentFolder.OwnerId != userId)
             {
                 return Unauthorized();
             }
 
-            var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)), "Id", "Title");
+            var noteViewModel = new NoteViewModel
+            {
+                Id = note.Id,
+                Title = note.Title,
+                Text = note.Text,
+                IsFavourite = note.IsFavourite,
+                Priority = note.Priority,
+                ParentFolderId = note.ParentFolderId
+            };
+
+            var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == userId), "Id", "Title");
             ViewData["Folders"] = folders;
-            return View(note);
+            return View(noteViewModel);
         }
 
         [Authorize]
@@ -132,23 +141,23 @@ namespace NotesApplication.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [FromForm]Note editedNote)
+        public async Task<IActionResult> Edit(int id, [FromForm]NoteViewModel noteViewModel)
         {
-            if (id != editedNote.Id)
+            if (id != noteViewModel.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == editedNote.Id);
+                var note = await _context.Notes.FindAsync(id);
 
-                note.Title = editedNote.Title;
-                note.Text = editedNote.Text;
-                note.IsFavourite = editedNote.IsFavourite;
-                note.Priority = editedNote.Priority;
+                note.Title = noteViewModel.Title;
+                note.Text = noteViewModel.Text;
+                note.IsFavourite = noteViewModel.IsFavourite;
+                note.Priority = noteViewModel.Priority;
                 note.EditDate = DateTimeOffset.UtcNow;
-                note.ParentFolderId = editedNote.ParentFolderId;
+                note.ParentFolderId = noteViewModel.ParentFolderId;
                 try
                 {
                     _context.Update(note);
@@ -165,31 +174,26 @@ namespace NotesApplication.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction("Details", note);
+                return RedirectToAction("Details", new { id = note.Id });
             }
-            var folders = await _context.Folders.Where(f => f.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier)).ToListAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var folders = new SelectList(_context.Folders.Where(f => f.OwnerId == userId), "Id", "Title");
             ViewData["Folders"] = folders;
-            return View(editedNote);
+            return View(noteViewModel);
         }
 
         [Authorize]
         [SwaggerOperation(Summary = "Для страницы удаления заметки.")]
         [HttpGet]
         [Route("Delete/{id?}")]
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null || _context.Notes == null)
-            {
-                return NotFound();
-            }
-
-            var note = await _context.Notes.FindAsync(id);
+            var note = await _context.Notes.Include(n => n.ParentFolder).FirstOrDefaultAsync(n => n.Id == id);
             if (note == null)
             {
                 return NotFound();
             }
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(n => n.Id == note.ParentFolderId);
-            if (parentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            if (note.ParentFolder.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 return Unauthorized();
             }
@@ -202,21 +206,16 @@ namespace NotesApplication.Controllers
         [HttpPost]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Notes == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Notes'  is null.");
-            }
-            var note = await _context.Notes.FindAsync(id);
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(n => n.Id == note.ParentFolderId);
+            var note = await _context.Notes.Include(n => n.ParentFolder).FirstOrDefaultAsync(n => n.Id == id);
             if (note != null)
             {
                 _context.Notes.Remove(note);
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Folders", parentFolder);
+            return RedirectToAction("Details", "Folders", new { id = note.ParentFolder.Id });
         }
 
         private bool NoteExists(int id)

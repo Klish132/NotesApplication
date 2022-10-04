@@ -3,7 +3,7 @@
 @{
     ViewBag.Title = Model.Title + "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var childFolders = ViewData["ChildFolders"] as List<Folder>;
+    //var childFolders = ViewData["ChildFolders"] as List<Folder>;
     var notes = ViewData["Notes"] as List<Note>;
 }
 
@@ -26,7 +26,7 @@
     @if (!@Model.IsRoot)
     {
         <span>| </span><a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a>
-        if (childFolders.Count == 0 && notes.Count == 0) {
+        if (@Model.ChildFolders.Count == 0 && notes.Count == 0) {
             <span>| </span><a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
         }
         <span>| </span><a asp-action="Details" asp-route-id="@Model.ParentFolderId">Back</a>
@@ -39,7 +39,7 @@
     <a asp-action="Details" asp-route-id="@Model?.Id" asp-route-sortType="2">Date</a>
 </div>
 <div>
-    @foreach (var folder in childFolders)
+    @foreach (var folder in @Model.ChildFolders)
     {
         <div class="folder">
             <img src="~/images/@folder.ImageFileName" width="25" height="25"> <h3><a asp-controller="Folders" asp-action="Details" asp-route-id="@folder?.Id">@folder.Title</a></h3>

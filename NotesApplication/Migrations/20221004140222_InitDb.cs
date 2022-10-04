@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace NotesApplication.Migrations
 {
-    public partial class InitialDatabase : Migration
+    public partial class InitDb : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -192,8 +192,8 @@ namespace NotesApplication.Migrations
                     Title = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
                     Text = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     IsFavourite = table.Column<bool>(type: "boolean", nullable: false),
-                    CreationDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    EditDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    CreationDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    EditDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Priority = table.Column<int>(type: "integer", nullable: false),
                     ParentFolderId = table.Column<int>(type: "integer", nullable: false)
                 },

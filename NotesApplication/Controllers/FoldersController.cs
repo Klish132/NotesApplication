@@ -38,14 +38,11 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Информация о папке, включая все лежащие в ней папки и заметки.")]
         [HttpGet]
         [Route("Details/{id}")]
-        public async Task<IActionResult> Details(int? id, int? sortType, bool? dir)
+        public async Task<IActionResult> Details(int id, int? sortType, bool? dir)
         {
-            if (id == null || _context.Folders == null)
-            {
-                return NotFound();
-            }
-
-            var folder = await _context.Folders.FindAsync(id);
+            var folder = await _context.Folders
+                .Include(f => f.ChildFolders.OrderBy(cf => cf.Title))
+                .FirstOrDefaultAsync(f => f.Id == id);
 
             if (folder == null)
             {
@@ -59,7 +56,6 @@ namespace NotesApplication.Controllers
             var sort =  sortType is null ? (int)SortType.Title : sortType;
             var ascending = dir is null ? false : true;
 
-            var childFolders = await _context.Folders.OrderBy(f => f.Title).Where(f => f.ParentFolder == folder).ToListAsync();
             var notes = new List<Note>();
 
             if (ascending)
@@ -97,7 +93,6 @@ namespace NotesApplication.Controllers
                 }
             }
 
-            ViewData["ChildFolders"] = childFolders;
             ViewData["Notes"] = notes;
             return View(folder);
         }
@@ -128,11 +123,14 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Для страницы создания папки.")]
         [HttpGet]
         [Route("Create")]
-        public IActionResult Create(int? parentFolderId)
+        public IActionResult Create(int parentFolderId)
         {
-            ViewData["OwnerId"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            ViewData["ParentFolderId"] = parentFolderId;
-            return View();
+            var folderViewModel = new FolderViewModel
+            {
+                ParentFolderId = parentFolderId,
+                OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            };
+            return View(folderViewModel);
         }
 
         [Authorize]
@@ -159,10 +157,8 @@ namespace NotesApplication.Controllers
                 _context.Add(folder);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction("Details", folder);
+                return RedirectToAction("Details", new { id = folder.Id });
             }
-            ViewData["OwnerId"] = folderViewModel.OwnerId;
-            ViewData["ParentFolderId"] = folderViewModel.ParentFolderId;
             return View(folderViewModel);
         }
 
@@ -170,13 +166,8 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Для страницы редактирования папки.")]
         [HttpGet]
         [Route("Edit/{id?}")]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Folders == null)
-            {
-                return NotFound();
-            }
-
             var folder = await _context.Folders.FindAsync(id);
             if (folder == null)
             {
@@ -188,18 +179,14 @@ namespace NotesApplication.Controllers
             }
             if (folder.IsRoot)
             {
-                return RedirectToAction("Details", folder);
+                return RedirectToAction("Details", new { id = folder.Id });
             }
             var folderViewModel = new FolderViewModel
             {
                 Id = folder.Id,
                 Title = folder.Title,
-                ImageFileName = folder.ImageFileName,
-                OwnerId = folder.OwnerId,
-                ParentFolderId = folder.ParentFolderId
+                ImageFileName = folder.ImageFileName
             };
-            ViewData["OwnerId"] = folder.OwnerId;
-            ViewData["ParentFolderId"] = folder.ParentFolderId;
             return View(folderViewModel);
         }
 
@@ -217,7 +204,7 @@ namespace NotesApplication.Controllers
 
             if (ModelState.IsValid)
             {
-                var folder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folderViewModel.Id);
+                var folder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == id);
 
                 folder.Title = folderViewModel.Title;
                 var file = folderViewModel.ImageFile;
@@ -241,10 +228,8 @@ namespace NotesApplication.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction("Details", folder);
+                return RedirectToAction("Details", new { id = folder.Id });
             }
-            ViewData["OwnerId"] = folderViewModel.OwnerId;
-            ViewData["ParentFolderId"] = folderViewModel.ParentFolderId;
             return View(folderViewModel);
         }
 
@@ -252,14 +237,12 @@ namespace NotesApplication.Controllers
         [SwaggerOperation(Summary = "Для страницы удаления папки.")]
         [HttpGet]
         [Route("Delete/{id?}")]
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null || _context.Folders == null)
-            {
-                return NotFound();
-            }
-
-            var folder = await _context.Folders.FindAsync(id);
+            var folder = await _context.Folders
+                .Include(f => f.ChildFolders)
+                .Include(f => f.Notes)
+                .FirstOrDefaultAsync(f => f.Id == id);
 
             if (folder == null)
             {
@@ -269,11 +252,9 @@ namespace NotesApplication.Controllers
             {
                 return Unauthorized();
             }
-            var childFolders = await _context.Folders.Where(f => f.ParentFolder == folder).ToListAsync();
-            var notes = await _context.Notes.Where(f => f.ParentFolder == folder).ToListAsync();
-            if (childFolders.Count != 0 || notes.Count != 0 || folder.IsRoot)
+            if (folder.ChildFolders.Count != 0 || folder.Notes.Count != 0 || folder.IsRoot)
             {
-                return RedirectToAction("Details", folder);
+                return RedirectToAction("Details", new { id = folder.Id });
             }
 
             return View(folder);
@@ -286,19 +267,14 @@ namespace NotesApplication.Controllers
         [Route("Delete/{id}")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Folders == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Folders'  is null.");
-            }
-            var folder = await _context.Folders.FindAsync(id);
-            var parentFolder = await _context.Folders.FirstOrDefaultAsync(f => f.Id == folder.ParentFolderId);
+            var folder = await _context.Folders.Include(f => f.ParentFolder).FirstOrDefaultAsync(f => f.Id == id);
             if (folder != null)
             {
                 _context.Folders.Remove(folder);
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Details", parentFolder);
+            return RedirectToAction("Details", new { id = folder.ParentFolder.Id });
         }
 
         private bool FolderExists(int id)

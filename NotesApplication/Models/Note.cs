@@ -20,12 +20,12 @@ namespace NotesApplication.Models
         [DisplayName("Favourite?")]
         public bool IsFavourite { get; set; } = false;
         [DisplayName("Created")]
-        public DateTimeOffset? CreationDate { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset CreationDate { get; set; } = DateTimeOffset.UtcNow;
         [DisplayName("Last edited")]
-        public DateTimeOffset? EditDate { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset EditDate { get; set; } = DateTimeOffset.UtcNow;
         public NotePriority Priority { get; set; } = NotePriority.Normal;
         [DisplayName("Folder")]
         public int ParentFolderId { get; set; }
-        public virtual Folder? ParentFolder { get; set; }
+        public Folder? ParentFolder { get; set; }
     }
 }
